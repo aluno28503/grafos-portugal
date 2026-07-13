@@ -1,5 +1,7 @@
 import heapq
-
+import networkx as nx
+import matplotlib.pyplot as plt
+import os
 
 # =============================================================================
 # Estrutura Union-Find (para Kruskal)
@@ -88,6 +90,41 @@ def prim(vertices, arestas, inicio="S1"):
 
 
 # =============================================================================
+# Visualizacao do Grafo
+# =============================================================================
+
+def desenhar_grafo_agm(estacoes, ligacoes, agm_arestas, titulo, nome_ficheiro):
+    G = nx.Graph()
+    G.add_nodes_from(estacoes)
+    for u, v, c in ligacoes:
+        G.add_edge(u, v, weight=c)
+    
+    # Layout circular e bom para grafos abstratos pequenos
+    pos = nx.circular_layout(G)
+    plt.figure(figsize=(10, 8))
+    
+    # Desenhar arestas normais a cinzento
+    nx.draw_networkx_edges(G, pos, alpha=0.3, edge_color='gray')
+    nx.draw_networkx_nodes(G, pos, node_color='lightblue', node_size=600, edgecolors='black')
+    nx.draw_networkx_labels(G, pos, font_size=10, font_weight='bold')
+    
+    # Desenhar arestas da AGM a vermelho
+    agm_edges = [(u, v) for u, v, c in agm_arestas]
+    nx.draw_networkx_edges(G, pos, edgelist=agm_edges, width=3.0, edge_color='red')
+    
+    # Adicionar custos nas arestas
+    edge_labels = {(u, v): d['weight'] for u, v, d in G.edges(data=True)}
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8)
+    
+    plt.title(titulo, fontsize=14, pad=20)
+    plt.axis('off')
+    plt.tight_layout()
+    plt.savefig(nome_ficheiro, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"  Imagem gravada: {nome_ficheiro}")
+
+
+# =============================================================================
 # Dados: Estacoes e Ligacoes
 # =============================================================================
 
@@ -144,6 +181,11 @@ if __name__ == "__main__":
 
     print(f"\n  Numero de arestas na AGM: {len(agm_kruskal)}")
     print(f"  Custo Total Minimo (Kruskal): {custo_kruskal} unidades")
+    
+    # Gerar imagem da AGM do Kruskal
+    desenhar_grafo_agm(estacoes, ligacoes, agm_kruskal, 
+                       "Árvore Geradora Mínima - Kruskal\n(A vermelho)", 
+                       "parte1_kruskal.png")
     print("=" * 60)
 
     # --- Prim ---
@@ -159,6 +201,11 @@ if __name__ == "__main__":
 
     print(f"\n  Numero de arestas na AGM: {len(agm_prim)}")
     print(f"  Custo Total Minimo (Prim): {custo_prim} unidades")
+    
+    # Gerar imagem da AGM do Prim
+    desenhar_grafo_agm(estacoes, ligacoes, agm_prim, 
+                       "Árvore Geradora Mínima - Prim\n(A vermelho)", 
+                       "parte1_prim.png")
     print("=" * 60)
 
     # --- Comparacao ---

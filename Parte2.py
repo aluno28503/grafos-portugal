@@ -1,5 +1,7 @@
 from collections import deque
-
+import networkx as nx
+import matplotlib.pyplot as plt
+import os
 
 # =============================================================================
 # BFS - Sistema de Navegacao de Ambulancias (30 vertices)
@@ -37,6 +39,50 @@ def bfs_ambulancias(grafo, inicio, destino):
     )
 
     return niveis, caminho_final, distancia_4, arvore_bfs
+
+
+# =============================================================================
+# Visualizacao do Grafo
+# =============================================================================
+
+def desenhar_bfs(ruas, niveis, caminho, nome_ficheiro):
+    G = nx.Graph()
+    G.add_edges_from(ruas)
+    
+    # Tentar forcar os nós para parecerem uma grelha
+    pos = nx.kamada_kawai_layout(G)
+    
+    plt.figure(figsize=(12, 10))
+    
+    # Cores baseadas nos niveis (distancia a A1)
+    node_colors = [niveis.get(n, 0) for n in G.nodes()]
+    
+    # Desenhar os nos normais
+    nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, cmap=plt.cm.Wistia, 
+                                 node_size=800, edgecolors='gray')
+    nx.draw_networkx_edges(G, pos, alpha=0.3, edge_color='gray')
+    nx.draw_networkx_labels(G, pos, font_size=9, font_weight='bold')
+    
+    # Destacar o caminho mais curto a vermelho
+    if caminho:
+        caminho_edges = [(caminho[i], caminho[i+1]) for i in range(len(caminho)-1)]
+        nx.draw_networkx_edges(G, pos, edgelist=caminho_edges, width=3.5, edge_color='blue')
+        
+    # Destacar o no de inicio
+    if "A1" in G.nodes():
+        nx.draw_networkx_nodes(G, pos, nodelist=["A1"], node_color="green", node_size=900, edgecolors='black')
+    
+    # Destacar o destino
+    if "A30" in G.nodes():
+        nx.draw_networkx_nodes(G, pos, nodelist=["A30"], node_color="red", node_size=900, edgecolors='black')
+        
+    plt.title("BFS - Navegação de Ambulâncias (A1 -> A30)\nCores: Distância a A1 | Azul: Caminho mais curto", fontsize=14)
+    plt.colorbar(nodes, label="Níveis de Distância (ruas)")
+    plt.axis('off')
+    plt.tight_layout()
+    plt.savefig(nome_ficheiro, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"  Imagem gravada: {nome_ficheiro}")
 
 
 # =============================================================================
@@ -128,4 +174,8 @@ if __name__ == "__main__":
     print("=" * 60)
     print(f"  Total: {len(dist_4)} vertices")
     print(f"  Vertices: {', '.join(dist_4)}")
+    
+    # Gerar imagem
+    desenhar_bfs(ruas, niveis, caminho, "parte2_bfs.png")
+    
     print("=" * 60)

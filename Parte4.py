@@ -1,4 +1,6 @@
 import heapq
+import networkx as nx
+import matplotlib.pyplot as plt
 
 
 # =============================================================================
@@ -83,6 +85,86 @@ def imprimir_arvore(no, prefixo="", is_esq=True, is_raiz=True):
 
 
 # =============================================================================
+# Visualizacao da Arvore
+# =============================================================================
+
+def _hierarchy_pos(G, root, width=1., vert_gap=0.2, vert_loc=0, xcenter=0.5, pos=None, parsed=None):
+    if pos is None:
+        pos = {root: (xcenter, vert_loc)}
+    else:
+        pos[root] = (xcenter, vert_loc)
+    
+    if parsed is None:
+        parsed = set()
+    parsed.add(root)
+    
+    neighbors = list(G.successors(root))
+    
+    if len(neighbors) != 0:
+        dx = width / 2 
+        nextx = xcenter - width/2 - dx/2
+        for neighbor in neighbors:
+            nextx += dx
+            pos = _hierarchy_pos(G, neighbor, width=dx, vert_gap=vert_gap, 
+                                vert_loc=vert_loc-vert_gap, xcenter=nextx,
+                                pos=pos, parsed=parsed)
+    return pos
+
+
+def desenhar_huffman(raiz, nome_ficheiro):
+    G = nx.DiGraph()
+    labels = {}
+    edge_labels = {}
+    node_colors = []
+    
+    # Percorrer a arvore para construir o grafo do NetworkX
+    def traverse(no, idx):
+        node_id = f"{idx}_{no.char}_{no.freq}"
+        if no.char:
+            labels[node_id] = f"{no.char}\n{no.freq}"
+        else:
+            labels[node_id] = f"{no.freq}"
+            
+        if no.esq:
+            esq_id = traverse(no.esq, idx*2)
+            G.add_edge(node_id, esq_id)
+            edge_labels[(node_id, esq_id)] = '0'
+        if no.dir:
+            dir_id = traverse(no.dir, idx*2+1)
+            G.add_edge(node_id, dir_id)
+            edge_labels[(node_id, dir_id)] = '1'
+            
+        return node_id
+
+    root_id = traverse(raiz, 1)
+    
+    # Colorir as folhas de cor diferente dos nos internos
+    for n in G.nodes():
+        if n in labels and '\n' in labels[n]:  # e uma folha
+            node_colors.append('lightgreen')
+        else:
+            node_colors.append('lightblue')
+            
+    pos = _hierarchy_pos(G, root=root_id, width=1.5, vert_gap=0.3)
+    
+    plt.figure(figsize=(12, 8))
+    
+    # Desenhar grafo
+    nx.draw(G, pos, with_labels=False, node_color=node_colors, node_size=2000, 
+            edgecolors='gray', arrows=False)
+            
+    nx.draw_networkx_labels(G, pos, labels=labels, font_size=10, font_weight='bold')
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=12, font_color='red')
+    
+    plt.title("Árvore de Huffman - Compressão de Logs", fontsize=16, pad=20)
+    plt.axis('off')
+    plt.tight_layout()
+    plt.savefig(nome_ficheiro, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"  Imagem gravada: {nome_ficheiro}")
+
+
+# =============================================================================
 # Dados: Frequencias dos simbolos
 # =============================================================================
 
@@ -109,6 +191,10 @@ if __name__ == "__main__":
     print("  ARVORE DE HUFFMAN")
     print("=" * 60)
     imprimir_arvore(raiz)
+    
+    # Gerar a imagem graficamente
+    desenhar_huffman(raiz, "parte4_huffman.png")
+    
     print("=" * 60)
 
     # --- Tarefa 2: Mostrar codigos ---

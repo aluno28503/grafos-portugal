@@ -1,3 +1,7 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+import os
+
 # =============================================================================
 # DFS - Inspecao de Rede Florestal (25 vertices)
 # =============================================================================
@@ -19,6 +23,51 @@ def dfs_floresta(grafo, inicio):
 
     dfs_recursivo(inicio)
     return visitados
+
+
+# =============================================================================
+# Visualizacao do Grafo
+# =============================================================================
+
+def desenhar_dfs(trilhos, ordem, nome_ficheiro):
+    G = nx.Graph()
+    G.add_edges_from(trilhos)
+    
+    pos = nx.kamada_kawai_layout(G)
+    
+    plt.figure(figsize=(10, 8))
+    
+    # Criar um dicionario de ordem para mapear cores
+    ordem_dict = {no: i for i, no in enumerate(ordem)}
+    node_colors = [ordem_dict.get(n, -1) for n in G.nodes()]
+    
+    # Desenhar
+    nodes = nx.draw_networkx_nodes(G, pos, node_color=node_colors, cmap=plt.cm.YlOrRd, 
+                                 node_size=700, edgecolors='gray')
+    nx.draw_networkx_edges(G, pos, alpha=0.5, edge_color='gray')
+    nx.draw_networkx_labels(G, pos, font_size=10, font_weight='bold')
+    
+    # Adicionar setas para indicar o caminho exato do DFS
+    caminho_dfs = [(ordem[i], ordem[i+1]) for i in range(len(ordem)-1)]
+    
+    # Criar um DiGraph temporario so para desenhar as setas do caminho
+    G_direcionado = nx.DiGraph()
+    G_direcionado.add_edges_from(caminho_dfs)
+    nx.draw_networkx_edges(G_direcionado, pos, edgelist=caminho_dfs, edge_color='blue', 
+                           width=2.0, alpha=0.7, arrowstyle='->', arrowsize=20)
+    
+    # Destacar ponto inicial
+    if "P1" in G.nodes():
+        nx.draw_networkx_nodes(G, pos, nodelist=["P1"], node_color="lightgreen", 
+                               node_size=800, edgecolors='black', linewidths=2)
+
+    plt.title("DFS - Inspeção Florestal (a partir de P1)\nCor (Claro->Escuro) = Ordem de visita | Setas = Caminho percorrido", fontsize=14)
+    plt.colorbar(nodes, label="Ordem de Visita")
+    plt.axis('off')
+    plt.tight_layout()
+    plt.savefig(nome_ficheiro, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"  Imagem gravada: {nome_ficheiro}")
 
 
 # =============================================================================
@@ -93,5 +142,8 @@ if __name__ == "__main__":
         todos = set(f"P{i}" for i in range(1, 26))
         nao_visitados = sorted(todos - set(ordem), key=lambda x: int(x[1:]))
         print(f"  Pontos nao alcancados: {', '.join(nao_visitados)}")
+
+    # Gerar imagem
+    desenhar_dfs(trilhos, ordem, "parte3_dfs.png")
 
     print("=" * 60)
