@@ -158,7 +158,6 @@ def desenhar_huffman(raiz, nome_ficheiro):
     
     plt.title("Árvore de Huffman - Compressão de Logs", fontsize=16, pad=20)
     plt.axis('off')
-    plt.tight_layout()
     plt.savefig(nome_ficheiro, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"  Imagem gravada: {nome_ficheiro}")
